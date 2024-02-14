@@ -134,16 +134,18 @@ function App() {
       <div className="container mt-4 mb-4">
       {/* ********************* add book description **************** */}
       {/* <!-- Button trigger modal --> */}
-      <div className="row">
-        <div className="col-9">
-          <input type="text" value="Rechercher Un livre " className="form-control mb-4" />
-        </div>
-        <div className="col-3">
-          <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-          <i className="fa-solid fa-plus"></i> Nouveau Livre <i className="fa-solid fa-book"></i>
-        </button>
-        </div>
-      </div>
+      {/* <nav className=" "> */}
+          <div className="row navbar fixed-top navbar-light bg-light mb-4 px-2">
+            <div className="col-10">
+              <input type="text" value="Rechercher Un livre " className="form-control " />
+            </div>
+            <div className="col-2">
+              <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                <i className="fa-solid fa-plus"></i> 
+            </button>
+            </div>
+          </div>    
+      {/* </nav> */}
       
 
         {/* <!-- Modal --> */}
