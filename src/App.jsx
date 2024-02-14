@@ -1,6 +1,21 @@
 import  { useState, useEffect } from 'react'
- 
+// import { initializeApp } from "firebase/app";
+// import { getAnalytics } from "firebase/analytics";
+// import axios from 'axios'; // For Node.js
+
 function App() {
+  // const firebaseConfig = {
+  //   apiKey: import.meta.apiKey,
+  //   authDomain: import.meta.authDomain,
+  //   projectId: import.meta.projectId,
+  //   storageBucket: import.meta.storageBucket,
+  //   messagingSenderId: import.meta.messagingSenderId,
+  //   appId: import.meta.appId,
+  //   measurementId: import.meta.measurementId,
+  // };
+// const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);
+
   const [books, setBooks] = useState([]);
   const [db, setDb] = useState(null);
   const [currentBook, setCurrentBook] = useState({ id: '', title: '',url: '', description: '', category: '' });
@@ -30,6 +45,16 @@ function App() {
     { id: 20, title: "Les Rougon-Macquart", category: "Série de romans", description: "Une série de romans d'Émile Zola dépeignant la société française sous le Second Empire." }
   ];
   useEffect(()=>{
+    
+    // axios({
+    //   method: 'get',
+    //   url: 'https://firestore.googleapis.com/v1/projects/YOUR_PROJECT_ID/databases/(default)/documents/YOUR_COLLECTION/YOUR_DOCUMENT?key=YOUR_API_KEY',
+    //   responseType: 'json'
+    // })
+    //   .then(function (response) {
+    //     // response.data.pipe(fs.createWriteStream('ada_lovelace.jpg'))
+    //   });
+
     const request = indexedDB.open("LibraryDb", 1)
     request.onupgradeneeded = function(event){ // S'éxécute au moment ou la BDD est crée et lorsqu'elle change de version
       const db = event.target.result
@@ -39,7 +64,6 @@ function App() {
       setDb(event.target.result)
       InsertBooks(event.target.result)
       fetchBooks(event.target.result)
-
     }
     // Fonction pour charger les livres depuis la base de données
     const InsertBooks = function (db) {
@@ -49,7 +73,6 @@ function App() {
       fetchedBooks.forEach((book) => {
         bookStore.add(book);
       });
-
     }
     
 
@@ -112,10 +135,10 @@ function App() {
       {/* ********************* add book description **************** */}
       {/* <!-- Button trigger modal --> */}
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-9">
           <input type="text" value="Rechercher Un livre " className="form-control mb-4" />
         </div>
-        <div className="col-md-3">
+        <div className="col-3">
           <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
           <i className="fa-solid fa-plus"></i> Nouveau Livre <i className="fa-solid fa-book"></i>
         </button>
@@ -124,7 +147,7 @@ function App() {
       
 
         {/* <!-- Modal --> */}
-        <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal fade mt-5" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -159,14 +182,14 @@ function App() {
     
       {books.map(book => (
       <div className="row mb-3 bg-body-tertiary shadow-sm p-3 rounded-5" key={book.id}>
-        <div className="col-md-3">
+        <div className="col-md-3 col-12 justify-content-center ">
             {book.url ? (
-                <img src={book.url} alt={book.title} className="img-responsive img-thumbnail" /> // Use alt text for accessibility
+                <img src={book.url} alt={book.title} className="img-responsive img-thumbnail" style={{height: "200px", width: "300px"}} /> // Use alt text for accessibility
               ) : (
                 <img
                   src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqKgpctFDqyyTTcugJX-etCXDsOstrC-lq3553mX2ISchytmwCTvx98BH4O03f_DIPE5c&usqp=CAU"
                   alt="Placeholder book image" // Descriptive alt text for placeholder
-                  className="img-responsive"
+                  className="img-responsive "
                 />
               )}
               </div>
