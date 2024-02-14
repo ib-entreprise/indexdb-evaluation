@@ -5,8 +5,10 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [book, setBooks] = useState([]);
+  const [books, setBooks] = useState([]);
   const [db, setDb] = useState(null);
+  const [currentFilm, setCurrentFilm] = useState({ id: '', titre: '', description: '', category: '' });
+
   
 
   const fetchedBooks = [
@@ -39,11 +41,23 @@ function App() {
     }
     request.onsuccess = function(event){ // Si la fonction open a été éxécutée avec succès
       setDb(event.target.result)
+      InsertBooks(event.target.result)
       fetchBooks(event.target.result)
-    }
 
+    }
     // Fonction pour charger les livres depuis la base de données
     const fetchBooks = function (db) {
+      const transaction = db.transaction(["books"], "readonly");
+      const bookStore = transaction.objectStore("books");
+      // Mettre à jour l'état "books" avec les livres chargés
+      const request = bookStore.getAll();
+      request.onsuccess = function () {
+        setBooks(request.result);
+        console.log(request.result);
+      };
+    };
+
+    const InsertBooks = function (db) {
       const transaction = db.transaction(["books"], "readwrite");
       const bookStore = transaction.objectStore("books");
 
@@ -51,16 +65,8 @@ function App() {
       fetchedBooks.forEach((book) => {
         bookStore.add(book);
       });
-
-      // Mettre à jour l'état "books" avec les livres chargés
-      const request = bookStore.getAll();
-      request.onsuccess = function () {
-        setBooks(request.result);
-      };
-    };
-  
-  
-   
+    }
+    
 
   }, [])
 
@@ -69,9 +75,25 @@ function App() {
   return (
     
     <>
-      
-      <h1>Bienvenue au Book store</h1>
-     
+      <div className="container mt-4 mb-4">
+      <input type="text" value="Rechercher Un livre " className="form-control mb-4" />
+      {books.map(book => (
+      <div className="row mb-3 bg-body-tertiary shadow-sm " key={book.id}>
+
+        <div className="col-md-3"> <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqKgpctFDqyyTTcugJX-etCXDsOstrC-lq3553mX2ISchytmwCTvx98BH4O03f_DIPE5c&usqp=CAU" className='img-responsive  ' alt="" /></div>
+        <div className="col-md-6">
+          <h4> {book.title} </h4>
+          <p>{book.description}</p>
+          <h5>Categorie: <span>{book.category} </span> </h5>
+        </div>
+        <div className="col-md-3">
+          <button className="btn btn-warning mx-2"> Editer</button>
+          <button className="btn btn-danger"> Supprimer</button>
+        </div>
+      </div>
+
+        ))}
+        </div>
     </>
   )
 }
