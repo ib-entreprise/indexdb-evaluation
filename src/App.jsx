@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from 'react'
-
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import  { useState, useEffect } from 'react'
+ 
 function App() {
   const [books, setBooks] = useState([]);
   const [db, setDb] = useState(null);
-  const [currentFilm, setCurrentFilm] = useState({ id: '', titre: '', description: '', category: '' });
+  const [currentBook, setCurrentBook] = useState({ id: '', title: '',url: '', description: '', category: '' });
 
-  
+  const [editMode, setEditMode] = useState(false);
 
   const fetchedBooks = [
     { id: 1, title: "L'Étranger", category: "Roman", description: "Un roman d'Albert Camus sur l'absurdité de la vie." },
@@ -46,47 +42,129 @@ function App() {
 
     }
     // Fonction pour charger les livres depuis la base de données
-    const fetchBooks = function (db) {
-      const transaction = db.transaction(["books"], "readonly");
-      const bookStore = transaction.objectStore("books");
-      // Mettre à jour l'état "books" avec les livres chargés
-      const request = bookStore.getAll();
-      request.onsuccess = function () {
-        setBooks(request.result);
-        console.log(request.result);
-      };
-    };
-
     const InsertBooks = function (db) {
       const transaction = db.transaction(["books"], "readwrite");
       const bookStore = transaction.objectStore("books");
+        console.log(books.length);
 
       // Ajouter les livres de fetchedBooks
       fetchedBooks.forEach((book) => {
         bookStore.add(book);
       });
+
     }
     
 
   }, [])
 
+  const fetchBooks = function (db) {
+    const transaction = db.transaction(["books"], "readonly");
+    const bookStore = transaction.objectStore("books");
+    // Mettre à jour l'état "books" avec les livres chargés
+    const request = bookStore.getAll();
+    request.onsuccess = function () {
+      setBooks(request.result);
+    };
+  };
+  const addBook = (book) => {
+    const transaction = db.transaction(["books"], "readwrite")
+    const bookStore = transaction.objectStore('books')
+    bookStore.add(book)
+    fetchBooks(db)
+  }
+  const handleSubmit = (event) => {
+    event.preventDefault()
+
+    setEditMode(false)
+
+    if(editMode){
+      // updateFilm(currentFilm)
+    }else{
+      addBook({...currentBook, id: Date.now()})
+    }
+    setCurrentBook({id: "", title: '', url: '', description: '', category: ''})
+
+  }
   
+    
+  const handleInputChange = (event) => {
+    const { name, value } = event.target
+    setCurrentBook(prev => ({ ...prev, [name]: value }));
+
+  }
+
   
   return (
     
     <>
       <div className="container mt-4 mb-4">
-      <input type="text" value="Rechercher Un livre " className="form-control mb-4" />
-      {books.map(book => (
-      <div className="row mb-3 bg-body-tertiary shadow-sm " key={book.id}>
-
-        <div className="col-md-3"> <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqKgpctFDqyyTTcugJX-etCXDsOstrC-lq3553mX2ISchytmwCTvx98BH4O03f_DIPE5c&usqp=CAU" className='img-responsive  ' alt="" /></div>
-        <div className="col-md-6">
-          <h4> {book.title} </h4>
-          <p>{book.description}</p>
-          <h5>Categorie: <span>{book.category} </span> </h5>
+      {/* ********************* add book description **************** */}
+      {/* <!-- Button trigger modal --> */}
+      <div className="row">
+        <div className="col-md-9">
+          <input type="text" value="Rechercher Un livre " className="form-control mb-4" />
         </div>
         <div className="col-md-3">
+          <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          <i className="fa-solid fa-plus"></i> Nouveau Livre <i className="fa-solid fa-book"></i>
+        </button>
+        </div>
+      </div>
+      
+
+        {/* <!-- Modal --> */}
+        <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="exampleModalLabel">Ajouter Un Nouveau Livre </h1>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div className="modal-body">
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label">Titre</label>
+                        <input type="text" className="form-control" name="title" value={currentBook.title} onChange={handleInputChange}  />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Categorie</label>
+                        <input className="form-control" name="category" value={currentBook.category} onChange={handleInputChange} />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Description</label>
+                        <textarea className="form-control" name="description" value={currentBook.description} onChange={handleInputChange} ></textarea>
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">url image </label>
+                        <input type="text" className="form-control" name="url" value={currentBook.annee} onChange={handleInputChange}  />
+                    </div>
+                    <button type="submit" className="btn btn-primary">{editMode ? 'Mettre à jour' : 'Ajouter'} Le Livre</button>
+                </form>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+    
+      {books.map(book => (
+      <div className="row mb-3 bg-body-tertiary shadow-sm p-3 rounded-5" key={book.id}>
+        <div className="col-md-3">
+            {book.url ? (
+                <img src={book.url} alt={book.title} className="img-responsive img-thumbnail" /> // Use alt text for accessibility
+              ) : (
+                <img
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqKgpctFDqyyTTcugJX-etCXDsOstrC-lq3553mX2ISchytmwCTvx98BH4O03f_DIPE5c&usqp=CAU"
+                  alt="Placeholder book image" // Descriptive alt text for placeholder
+                  className="img-responsive"
+                />
+              )}
+              </div>
+      <div className="col-md-6">
+          <h4> {book.title} </h4>
+          <p> {book.description} </p>
+          <h5>Categorie: <span>{book.category} </span> </h5>
+        </div>
+        <div className="col-md-3 py-4">
           <button className="btn btn-warning mx-2"> Editer</button>
           <button className="btn btn-danger"> Supprimer</button>
         </div>
