@@ -45,8 +45,6 @@ function App() {
     const InsertBooks = function (db) {
       const transaction = db.transaction(["books"], "readwrite");
       const bookStore = transaction.objectStore("books");
-        
-      
       // Ajouter les livres de fetchedBooks
       fetchedBooks.forEach((book) => {
         bookStore.add(book);
@@ -79,7 +77,7 @@ function App() {
     setEditMode(false)
 
     if(editMode){
-      // updateFilm(currentFilm)
+      updateBook(currentBook)
     }else{
       addBook({...currentBook, id: Date.now()})
     }
@@ -91,6 +89,12 @@ function App() {
     const transaction = db.transaction(["books"], "readwrite")
     const bookstore = transaction.objectStore('books')
     bookstore.delete(id) // supprimer l'element avec le id en indexedDb
+    fetchBooks(db)
+  }
+  const updateBook = (book) => {
+    const transaction = db.transaction(["books"], "readwrite")
+    const bookStore = transaction.objectStore('books')
+    bookStore.put(book) // mis a jour de l'element en indexedDb 
     fetchBooks(db)
   }
 
@@ -172,7 +176,13 @@ function App() {
           <h5>Categorie: <span>{book.category} </span> </h5>
         </div>
         <div className="col-md-3 py-4">
-          <button className="btn btn-warning mx-2"> Editer</button>
+          <button type="button" className="btn btn-warning mx-3" data-bs-toggle="modal" data-bs-target="#exampleModal"
+          onClick={() => {
+                                    setEditMode(true)
+                                    setCurrentBook(book)
+                                }}>
+           Edit  <i className="fa-solid fa-edit"></i>
+        </button>
           <button className="btn btn-danger" onClick={() => { deleteBook(book.id) }}> Supprimer</button>
         </div>
       </div>
