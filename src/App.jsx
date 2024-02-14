@@ -45,8 +45,8 @@ function App() {
     const InsertBooks = function (db) {
       const transaction = db.transaction(["books"], "readwrite");
       const bookStore = transaction.objectStore("books");
-        console.log(books.length);
-
+        
+      
       // Ajouter les livres de fetchedBooks
       fetchedBooks.forEach((book) => {
         bookStore.add(book);
@@ -65,11 +65,12 @@ function App() {
     request.onsuccess = function () {
       setBooks(request.result);
     };
+
   };
   const addBook = (book) => {
     const transaction = db.transaction(["books"], "readwrite")
     const bookStore = transaction.objectStore('books')
-    bookStore.add(book)
+    bookStore.add(book) // ajoute l\element a indexedDb
     fetchBooks(db)
   }
   const handleSubmit = (event) => {
@@ -86,7 +87,13 @@ function App() {
 
   }
   
-    
+  const deleteBook = (id) => {
+    const transaction = db.transaction(["books"], "readwrite")
+    const bookstore = transaction.objectStore('books')
+    bookstore.delete(id) // supprimer l'element avec le id en indexedDb
+    fetchBooks(db)
+  }
+
   const handleInputChange = (event) => {
     const { name, value } = event.target
     setCurrentBook(prev => ({ ...prev, [name]: value }));
@@ -166,7 +173,7 @@ function App() {
         </div>
         <div className="col-md-3 py-4">
           <button className="btn btn-warning mx-2"> Editer</button>
-          <button className="btn btn-danger"> Supprimer</button>
+          <button className="btn btn-danger" onClick={() => { deleteBook(book.id) }}> Supprimer</button>
         </div>
       </div>
 
