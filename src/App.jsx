@@ -1,27 +1,31 @@
-import  { useState, useEffect } from 'react'
-// import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
-// import axios from 'axios'; // For Node.js
+import  { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import axios from 'axios'
+
 
 function App() {
-  // const firebaseConfig = {
-  //   apiKey: import.meta.apiKey,
-  //   authDomain: import.meta.authDomain,
-  //   projectId: import.meta.projectId,
-  //   storageBucket: import.meta.storageBucket,
-  //   messagingSenderId: import.meta.messagingSenderId,
-  //   appId: import.meta.appId,
-  //   measurementId: import.meta.measurementId,
-  // };
-// const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
 
+  /* en principe les donnees sensibles ci-dessus doivent etre dans le fichier .env.developpement.local 
+  mais lors que je les mets labas elles ne sont pas accessible donc je les garde ici etant donnee que c'est 
+  un projet pas sensible. pour la version 2 nous les mettrons labas et travailler avec les variables d'environement */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkwkENO3aZqdbepwveC1VfuxKeTsFluwU",
+    authDomain: "books-71449.firebaseapp.com",
+    projectId: "books-71449",
+    storageBucket: "books-71449.appspot.com",
+    messagingSenderId: "320696521167",
+    appId: "1:320696521167:web:fa81641019ed080834c2ba",
+    measurementId: "G-8ZT8VS3GJQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  
   const [books, setBooks] = useState([]);
-  const [db, setDb] = useState(null);
   const [currentBook, setCurrentBook] = useState({ id: '', title: '',url: '', description: '', category: '' });
 
   const [editMode, setEditMode] = useState(false);
-
   const fetchedBooks = [
     { id: 1, title: "L'Étranger", category: "Roman", description: "Un roman d'Albert Camus sur l'absurdité de la vie." },
     { id: 2, title: "À la recherche du temps perdu", category: "Roman", description: "L'œuvre majeure de Marcel Proust." },
@@ -44,55 +48,111 @@ function App() {
     { id: 19, title: "Nana", category: "Roman", description: "Un roman d'Émile Zola sur la décadence de la société parisienne." },
     { id: 20, title: "Les Rougon-Macquart", category: "Série de romans", description: "Une série de romans d'Émile Zola dépeignant la société française sous le Second Empire." }
   ];
-  useEffect(()=>{
-    
-    // axios({
-    //   method: 'get',
-    //   url: 'https://firestore.googleapis.com/v1/projects/YOUR_PROJECT_ID/databases/(default)/documents/YOUR_COLLECTION/YOUR_DOCUMENT?key=YOUR_API_KEY',
-    //   responseType: 'json'
-    // })
-    //   .then(function (response) {
-    //     // response.data.pipe(fs.createWriteStream('ada_lovelace.jpg'))
-    //   });
-
-    const request = indexedDB.open("LibraryDb", 1)
-    request.onupgradeneeded = function(event){ // S'éxécute au moment ou la BDD est crée et lorsqu'elle change de version
-      const db = event.target.result
-      db.createObjectStore('books', { keyPath: 'id', autoIncrement: true})
-    }
-    request.onsuccess = function(event){ // Si la fonction open a été éxécutée avec succès
-      setDb(event.target.result)
-      InsertBooks(event.target.result)
-      fetchBooks(event.target.result)
-    }
-    // Fonction pour charger les livres depuis la base de données
-    const InsertBooks = function (db) {
-      const transaction = db.transaction(["books"], "readwrite");
-      const bookStore = transaction.objectStore("books");
-      // Ajouter les livres de fetchedBooks
-      fetchedBooks.forEach((book) => {
-        bookStore.add(book);
-      });
-    }
-    
-
+  useEffect(()=>{  
+    // Fonction pour charger les livres depuis la base de données firebase
+    getBooks();
   }, [])
 
-  const fetchBooks = function (db) {
-    const transaction = db.transaction(["books"], "readonly");
-    const bookStore = transaction.objectStore("books");
-    // Mettre à jour l'état "books" avec les livres chargés
-    const request = bookStore.getAll();
-    request.onsuccess = function () {
-      setBooks(request.result);
-    };
+ 
+  const addBookOnFireStore = function (book) {
+    const url_add_book = "https://firestore.googleapis.com/v1/projects/" + firebaseConfig.projectId + "/databases/(default)/documents/book?key=" + firebaseConfig.apiKey
+    try{
+        return axios.post(
+            url_add_book,
+            {
+                "fields": {
+                  "title": {
+                    "stringValue": book.title
+                  },
+                  "description": {
+                    "stringValue": book.description
+                  },
+                  "category": {
+                    "stringValue": book.category
+                  }
+                }
+              }
+        )
+        .then(function(response){
+            return response.data 
+        })
 
+    } catch(e){
+        console.error(e.response)
+    }
+  }
+ 
+  
+  /* delete book from the database FIREBASE */
+  const deleteBookOnFireStore = function(id){ 
+    const url_delete_book = "https://firestore.googleapis.com/v1/projects/" + firebaseConfig.projectId + "/databases/(default)/documents/book/" + id + "?key=" + firebaseConfig.apiKey
+    try{
+        return axios.delete(
+            url_delete_book
+        )
+        .then(function(response){
+            console.log(response)
+        })
+    } catch(e){
+        console.error(e)
+    }
+    getBooks()
   };
+
+  /* update a book from the database FIREBASE */
+  const updateBookOnFireStore = function(id){
+    const url_update_book = "https://firestore.googleapis.com/v1/projects/" + firebaseConfig.projectId + "/databases/(default)/documents/book/" +currentBook.id +"?key=" + firebaseConfig.apiKey
+    try{
+      return axios.patch(
+          url_update_book,
+          {
+              "fields": {
+                "title": {
+                  "stringValue": currentBook.title
+                },
+                "description": {
+                  "stringValue": currentBook.description
+                },
+                "category": {
+                  "stringValue": currentBook.category
+                }
+              }
+            }
+      )
+      .then(function(response){
+          return response.data 
+      })
+
+  } catch(e){
+        console.error(e)
+    }
+    // getBooks()
+
+  }
+
+  /* GEt all books from the database FIREBASE */
+  const getBooks = async () => {
+    const url = "https://firestore.googleapis.com/v1/projects/" + firebaseConfig.projectId + "/databases/(default)/documents/book/?key=" + firebaseConfig.apiKey
+    try {
+      const response = await axios.get(url);
+      const books = response.data.documents.map((sp) => ({
+        // id: sp.fields.id.stringValue, // Optional if not used
+        title: sp.fields.title.stringValue,
+        description: sp.fields.description.stringValue,
+        category: sp.fields.category.stringValue,
+      }));
+      setBooks(books);  
+      console.log(books);
+      return books; 
+    } catch (error) {
+      console.error('Error getting books:', error.response.data);
+    }
+  };
+  
+
   const addBook = (book) => {
-    const transaction = db.transaction(["books"], "readwrite")
-    const bookStore = transaction.objectStore('books')
-    bookStore.add(book) // ajoute l\element a indexedDb
-    fetchBooks(db)
+    addBookOnFireStore(book);
+    getBooks();
   }
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -102,23 +162,19 @@ function App() {
     if(editMode){
       updateBook(currentBook)
     }else{
-      addBook({...currentBook, id: Date.now()})
+      addBook(currentBook);
     }
     setCurrentBook({id: "", title: '', url: '', description: '', category: ''})
 
   }
   
   const deleteBook = (id) => {
-    const transaction = db.transaction(["books"], "readwrite")
-    const bookstore = transaction.objectStore('books')
-    bookstore.delete(id) // supprimer l'element avec le id en indexedDb
-    fetchBooks(db)
+    deleteBookOnFireStore(id);
+    getBooks();
   }
   const updateBook = (book) => {
-    const transaction = db.transaction(["books"], "readwrite")
-    const bookStore = transaction.objectStore('books')
-    bookStore.put(book) // mis a jour de l'element en indexedDb 
-    fetchBooks(db)
+    updateBookOnFireStore(book);
+    getBooks();
   }
 
   const handleInputChange = (event) => {
@@ -149,7 +205,7 @@ function App() {
       
 
         {/* <!-- Modal --> */}
-        <div className="modal fade mt-5" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal fade mt-5" id="exampleModal"  aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -196,7 +252,7 @@ function App() {
               )}
               </div>
       <div className="col-md-6">
-          <h4> {book.title} </h4>
+          <h4> {book.id} {book.title} </h4>
           <p> {book.description} </p>
           <h5>Categorie: <span>{book.category} </span> </h5>
         </div>
@@ -208,7 +264,7 @@ function App() {
                                 }}>
            Edit  <i className="fa-solid fa-edit"></i>
         </button>
-          <button className="btn btn-danger" onClick={() => { deleteBook(book.id) }}> Supprimer</button>
+          <button className="btn btn-danger" onClick={() => {   deleteBook(book.id)  }}> Supprimer</button>
         </div>
       </div>
 
